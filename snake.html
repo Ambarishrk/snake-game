@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <link rel="stylesheet" href="snakes.css">
+</head>
+<body>
+  <div class="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div class="score-board">
+      <h2>Score: <span id="score">0</span></h2>
+    </div>
+  </div>
+
+  <script>
+    // Canvas and Game Variables
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gridSize = 20;
+    const tileCount = 20;
+    let score = 0;
+    let snake = [{ x: 9, y: 9 }];
+    let direction = 'RIGHT';
+    let food = { x: 5, y: 5 };
+    let gameSpeed = 100; // Increase to reduce the speed
+
+    // Set canvas size based on the grid
+    canvas.width = tileCount * gridSize;
+    canvas.height = tileCount * gridSize;
+
+    // Load apple image
+    const appleImage = new Image();
+    appleImage.src = '189701415_l.jpg'; // Replace with your image URL or path
+
+    // Key Press Event Listener for control
+    document.addEventListener('keydown', changeDirection);
+
+    // Main Game Loop with interval to control speed
+    function gameLoop() {
+      setTimeout(function () {
+        updateSnake();
+        checkCollisions();
+        drawGame();
+        gameLoop();
+      }, gameSpeed); // Delay to slow down the game
+    }
+
+    // Update Snake Position
+    function updateSnake() {
+      let head = { ...snake[0] };
+      switch (direction) {
+        case 'UP':
+          head.y -= 1;
+          break;
+        case 'DOWN':
+          head.y += 1;
+          break;
+        case 'LEFT':
+          head.x -= 1;
+          break;
+        case 'RIGHT':
+          head.x += 1;
+          break;
+      }
+      snake.unshift(head); // Add new head to the front of the snake
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        spawnFood();
+        updateScore();
+      } else {
+        snake.pop(); // Remove the last part of the snake
+      }
+    }
+
+    // Change Snake Direction based on keyboard input
+    function changeDirection(event) {
+      if (event.key === "ArrowUp" || event.key === "w") {
+        if (direction !== 'DOWN') direction = 'UP';
+      } else if (event.key === "ArrowDown" || event.key === "s") {
+        if (direction !== 'UP') direction = 'DOWN';
+      } else if (event.key === "ArrowLeft" || event.key === "a") {
+        if (direction !== 'RIGHT') direction = 'LEFT';
+      } else if (event.key === "ArrowRight" || event.key === "d") {
+        if (direction !== 'LEFT') direction = 'RIGHT';
+      }
+    }
+
+    // Check if Snake collides with walls or itself
+    function checkCollisions() {
+      let head = snake[0];
+      // Check if snake hits the wall
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        resetGame();
+      }
+      // Check if snake collides with itself
+      for (let i = 1; i < snake.length; i++) {
+        if (snake[i].x === head.x && snake[i].y === head.y) {
+          resetGame();
+        }
+      }
+    }
+
+    // Reset Game
+    function resetGame() {
+      score = 0;
+      snake = [{ x: 9, y: 9 }];
+      direction = 'RIGHT';
+      updateScore();
+    }
+
+    // Draw the Snake, Food, and Background
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Draw Snake
+      snake.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? '#1abc9c' : '#16a085'; // Head is teal, body is darker teal
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+      });
+      // Draw Food
+      ctx.drawImage(appleImage, food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+    }
+
+    // Spawn food at a random location that isn't on the snake
+    function spawnFood() {
+      let newFood;
+      do {
+        newFood = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount),
+        };
+      } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+      food = newFood;
+    }
+
+    // Update the score display
+    function updateScore() {
+      document.getElementById('score').innerText = score;
+    }
+
+    // Start the game
+    gameLoop();
+  </script>
+</body>
+</html>
